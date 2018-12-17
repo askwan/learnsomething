@@ -6,6 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Example 01.02 - First Scene</title>
   <script type="text/javascript" src="../libs/three.js"></script>
+  <script src="../libs/Stats.js"></script>
   <script src="../libs/jquery.js"></script>
   <style>
       body {
@@ -16,10 +17,12 @@
   </style>
 </head>
 <body>
+  <div id="Stats-output"></div>
   <div id="WebGL-output"></div>
 </body>
 <script>
   function init(){
+    let stats = initStats();
     let scene = new THREE.Scene();
     let camera = new THREE.PerspectiveCamera(45,window.innerWidth/window.innerHeight,0.1,1000);
     let renderer = new THREE.WebGLRenderer();
@@ -78,8 +81,31 @@
     scene.add(spotLight);
 
     $('#WebGL-output').append(renderer.domElement);
-    renderer.render(scene,camera);
+    // renderer.render(scene,camera);
+
+    let step = 0;
+    renderScene();
+    function renderScene(){
+      stats.update();
+      cube.rotation.x += 0.02;
+      cube.rotation.y += 0.02;
+      cube.rotation.z += 0.02;
+      step += 0.04;
+      sphere.position.x = 20 + (10*(Math.cos(step)));
+      sphere.position.y = 2 + (10*(Math.abs(Math.sin(step))));
+      requestAnimationFrame(renderScene);
+      renderer.render(scene,camera);
+    }
+
+    function initStats(){
+      let stats = new Stats();
+
+      // stats.setMode(1);
+      $('#Stats-output').append(stats.domElement);
+      return stats
+    }
+
   }
-  
+  window.onload = init;
 </script>
 </html>
