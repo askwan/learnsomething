@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Document</title>
+  <script type="text/javascript" src="../libs/three.js"></script>
+  <script src="../libs/Stats.js"></script>
+  <script src="../libs/jquery.js"></script>
+  <script src="../libs/dat.gui.js"></script>
   <style>
     html,body{
       width: 100%;
@@ -15,6 +19,94 @@
   </style>
 </head>
 <body>
-  
+  <div id="WebGL-box"></div>
+  <div id="Stats-box"></div>
 </body>
+<script>
+  function init(){
+    let scene = new THREE.Scene();
+    let camera = new THREE.PerspectiveCamera(45,window.innerWidth/window.innerHeight,0.1,1000);
+    let renderer = new THREE.WebGLRenderer();
+    renderer.setClearColor(0xeeeeee,1);
+    renderer.setSize(window.innerWidth,window.innerHeight);
+
+    let spotLight = new THREE.AmbientLight(0xffffff);
+    spotLight.position.set(-40,60,-10);
+    // spotLight.castShadow = true;
+    scene.add(spotLight);
+
+    let planeGeometry = new THREE.PlaneGeometry(60,40);
+    let planeMaterial = new THREE.MeshLambertMaterial({color:0xffffff});
+    let plane = new THREE.Mesh(planeGeometry,planeMaterial);
+    plane.rotation.x = -0.5*Math.PI;
+    plane.position.x = 0;
+    scene.add(plane);
+
+    camera.position.x = -30;
+    camera.position.y = 40;
+    camera.position.z = 30;
+    camera.lookAt(scene.position);
+
+    renderer.render(scene,camera);
+    $('#WebGL-box').append(renderer.domElement);
+
+    let stats = initStats();
+    
+    initGui();
+    let id = 0;
+
+    function initGui(){
+      let gui = new dat.GUI();
+      let controls = {
+        rotateSpeed:0.02,
+        addCube:function(){
+          let cubeSize = Math.ceil((Math.random()*3));
+          let cubeGeometry = new THREE.CubeGeometry(cubeSize,cubeSize,cubeSize);
+          let cubeMaterial = new THREE.MeshLambertMaterial({color:0xffffff*Math.random()});
+          let cube = new THREE.Mesh(cubeGeometry,cubeMaterial);
+          id++;
+          cube.name = 'cube-'+id;
+          cube.position.x = -30 + Math.round((Math.random()*planeGeometry.parameters.width));
+          cube.position.y = Math.round(Math.random()*5);
+          cube.position.z = -20 + Math.round((Math.random()*planeGeometry.parameters.height));
+          scene.add(cube);
+        },
+        removeCube:function(){
+          let allChildren = scene.children;
+          let lastChildren = allChildren[allChildren.length-1];
+          
+          // console.log(scene.getObjectByName('cube-1'));
+          // console.log(allChildren);
+          if(lastChildren instanceof THREE.Mesh){
+            scene.remove(lastChildren);
+          }
+        }
+      }
+      gui.add(controls,'addCube');
+      gui.add(controls,'removeCube');
+      gui.add(controls,'rotateSpeed',0,0.5)
+      renderScene();
+      function renderScene(){
+        stats.update();
+        scene.traverse(function(e){
+          if(e instanceof THREE.Mesh && e != plane){
+            e.rotation.x += controls.rotateSpeed;
+            e.rotation.y += controls.rotateSpeed;
+            e.rotation.z += controls.rotateSpeed;
+          }
+        })
+        requestAnimationFrame(renderScene);
+        renderer.render(scene,camera);
+      }
+      return gui;
+    }
+  }
+  function initStats(){
+    let stats = new Stats();
+    $('#Stats-box').append(stats.domElement);
+    return stats;
+  }
+  
+  window.onload = init;
+</script>
 </html>
